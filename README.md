@@ -14,4 +14,4 @@ The project also relies on components from [Libjade](https://github.com/formosa-
 
 The `main` branch contains the modifications developed as part of my thesis. 
 
-The `original_xwing_kem_team` preserves the original X-Wing implementation used as the starting point for this work.
+The `original_xwing_kem_team` branch preserves the original X-Wing implementation used as the starting point for this work.
