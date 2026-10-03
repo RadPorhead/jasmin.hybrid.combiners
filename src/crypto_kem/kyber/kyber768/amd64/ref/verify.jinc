@@ -42,7 +42,7 @@ fn __cmov(reg ptr u8[KYBER_SYMBYTES] dst, reg u64 src cnd) -> reg ptr u8[KYBER_S
     t2 = t2 ^ t1;
     t2 = t2 & cnd;
     t1 ^= t2;
-    dst.[u8 i] = t1;
+    dst.[:u8 i] = t1;
   }
 
   return dst;
