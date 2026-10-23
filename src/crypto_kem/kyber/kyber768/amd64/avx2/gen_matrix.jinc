@@ -290,7 +290,7 @@ fn __shake128_squeezenblocks4x(reg ptr u256[25] state, reg ptr u8[REJ_UNIFORM_AV
 }
 
 inline
-fn __rej_uniform(reg ptr u16[KYBER_N] rp, reg u64 offset, reg ptr u8[SHAKE128_RATE] buf, inline int buflen) ->  reg u64, stack u16[KYBER_N]
+fn __rej_uniform(reg ptr u16[KYBER_N] rp, reg u64 offset, reg ptr u8[SHAKE128_RATE] buf, inline int buflen) ->  reg u64, reg ptr u16[KYBER_N]
 {
   reg u16 val0 val1;
   reg u16 t;
@@ -311,10 +311,10 @@ fn __rej_uniform(reg ptr u16[KYBER_N] rp, reg u64 offset, reg ptr u8[SHAKE128_RA
 
   while(!b)
   {
-    val0 = (16u)buf[(int)pos];
+    val0 = (16u)buf[(uint)pos];
     pos += 1;
 
-    t   = (16u)buf[(int)pos];
+    t   = (16u)buf[(uint)pos];
     val1 = t;
     val1 >>= 4;
 
@@ -323,14 +323,14 @@ fn __rej_uniform(reg ptr u16[KYBER_N] rp, reg u64 offset, reg ptr u8[SHAKE128_RA
     val0 |= t;
     pos += 1;
 
-    t   = (16u)buf[(int)pos];
+    t   = (16u)buf[(uint)pos];
     t <<= 4;
     val1 |= t;
     pos += 1;
 
     if(val0 < KYBER_Q)
     {
-      rp[(int)ctr] = val0;
+      rp[(uint)ctr] = val0;
       ctr += 1;
     }
 
@@ -338,7 +338,7 @@ fn __rej_uniform(reg ptr u16[KYBER_N] rp, reg u64 offset, reg ptr u8[SHAKE128_RA
     {
       if(val1 < KYBER_Q)
       {
-        rp[(int)ctr] = val1;
+        rp[(uint)ctr] = val1;
         ctr += 1;
       }
     }
@@ -376,12 +376,12 @@ fn _rej_uniform_avx(reg ptr u16[KYBER_N] rp, reg ptr u8[REJ_UNIFORM_AVX_BUFLEN] 
 
   idxp = ru_idx;
 
-  bound = jqx16[u256 0];
+  bound = jqx16[:u256 0];
   ctr = 0;
   pos = 0;
   ones = #VPBROADCAST_32u8(ru_ones_s);
   mask = #VPBROADCAST_16u16(ru_mask_s);
-  idx8 = ru_idx8_s[u256 0];
+  idx8 = ru_idx8_s[:u256 0];
 
   ?{ "<=u" = b } = #CMP_64(ctr, KYBER_N - 32);
   fl1 = #SETcc(b);
@@ -393,8 +393,8 @@ fn _rej_uniform_avx(reg ptr u16[KYBER_N] rp, reg ptr u8[REJ_UNIFORM_AVX_BUFLEN] 
 
   while(!b)
   {
-    f0 = #VPERMQ(buf.[u256 (int)pos], 0x94);
-    f1 = #VPERMQ(buf.[u256 24 + (int)pos], 0x94);
+    f0 = #VPERMQ(buf.[:u256 (uint)pos], 0x94);
+    f1 = #VPERMQ(buf.[:u256 24 + (uint)pos], 0x94);
     f0 = #VPSHUFB_256(f0, idx8);
     f1 = #VPSHUFB_256(f1, idx8);
     g0 = #VPSRL_16u16(f0, 4);
@@ -408,26 +408,26 @@ fn _rej_uniform_avx(reg ptr u16[KYBER_N] rp, reg ptr u8[REJ_UNIFORM_AVX_BUFLEN] 
     g1 = #VPCMPGT_16u16(bound, f1);
 
     g0 = #VPACKSS_16u16(g0, g1);
-    good = #VPMOVMSKB_u256u64(g0);
+    good = (64u)#MOVEMASK_32u8(g0);
 
     t64 = good;
     t64 &= 0xFF;
-    g0 = (256u) #VMOV(idxp[u64 (int)t64]);
+    g0 = (256u) #VMOV(idxp[:u64 (uint)t64]);
 
     t64_1 = good;
     t64_1 >>= 16;
     t64_1 &= 0xFF;
-    l = #VMOV(idxp[u64 (int)t64_1]);
+    l = #VMOV(idxp[:u64 (uint)t64_1]);
 
     t64_2 = good;
     t64_2 >>= 8;
     t64_2 &= 0xFF;
-    g1 = (256u) #VMOV(idxp[u64 (int)t64_2]);
+    g1 = (256u) #VMOV(idxp[:u64 (uint)t64_2]);
 
     t64_3 = good;
     t64_3 >>= 24;
     t64_3 &= 0xFF;
-    h = #VMOV(idxp[u64 (int)t64_3]);
+    h = #VMOV(idxp[:u64 (uint)t64_3]);
 
     g0 = #VINSERTI128(g0, l, 1);
 
@@ -451,10 +451,10 @@ fn _rej_uniform_avx(reg ptr u16[KYBER_N] rp, reg ptr u8[REJ_UNIFORM_AVX_BUFLEN] 
     f0 = #VPSHUFB_256(f0, g0);
     f1 = #VPSHUFB_256(f1, g1);
 
-    rp.[u128 2*(int)ctr] = (128u)f0;
-    rp.[u128 2*(int)t64] = #VEXTRACTI128(f0, 1);
-    rp.[u128 2*(int)t64_1] = (128u)f1;
-    rp.[u128 2*(int)t64_2] = #VEXTRACTI128(f1, 1);
+    rp.[:u128 2*(uint)ctr] = (128u)f0;
+    rp.[:u128 2*(uint)t64] = #VEXTRACTI128(f0, 1);
+    rp.[:u128 2*(uint)t64_1] = (128u)f1;
+    rp.[:u128 2*(uint)t64_2] = #VEXTRACTI128(f1, 1);
 
     ctr = t64_3;
 
@@ -479,24 +479,24 @@ fn _rej_uniform_avx(reg ptr u16[KYBER_N] rp, reg ptr u8[REJ_UNIFORM_AVX_BUFLEN] 
   t64 = 0x5555;
   while(!b)
   {
-    f = buf.[u128 (int)pos];
+    f = buf.[:u128 (uint)pos];
     f = #VPSHUFB_128(f, idx8);
     t = #VPSRL_8u16(f, 4);
     f = #VPBLEND_8u16(f, t, 0xAA);
     f = #VPAND_128(f, mask);
 
     t = #VPCMPGT_8u16(bound, f);
-    good = #VPMOVMSKB_u128u64(t);
+    good = (64u)#MOVEMASK_16u8(t);
 
     good = #PEXT_64(good, t64);
-    l = #VMOV(idxp[u64 (int)good]);
+    l = #VMOV(idxp[:u64 (uint)good]);
     _, _, _, _, _, good =  #POPCNT_64(good);
 
     h = #VPADD_16u8(l, ones);
     l = #VPUNPCKL_16u8(l, h);
     f = #VPSHUFB_128(f, l);
 
-    rp.[u128 2*(int)ctr] = f;
+    rp.[:u128 2*(uint)ctr] = f;
     ctr += good;
 
     pos += 12;
@@ -519,9 +519,9 @@ fn _rej_uniform_avx(reg ptr u16[KYBER_N] rp, reg ptr u8[REJ_UNIFORM_AVX_BUFLEN] 
 
   while(!b)
   {
-    val0 = (16u)buf[(int)pos];
+    val0 = (16u)buf[(uint)pos];
     pos += 1;
-    t16 = (16u)buf[(int)pos];
+    t16 = (16u)buf[(uint)pos];
     pos += 1;
     val1 = t16;
 
@@ -530,21 +530,21 @@ fn _rej_uniform_avx(reg ptr u16[KYBER_N] rp, reg ptr u8[REJ_UNIFORM_AVX_BUFLEN] 
     val0 &= 0xFFF;
 
     val1 >>= 4;
-    t16 = (16u)buf[(int)pos];
+    t16 = (16u)buf[(uint)pos];
     pos += 1;
     t16 <<= 4;
     val1 |= t16;
 
     if(val0 < KYBER_Q)
     {
-      rp[(int)ctr] = val0;
+      rp[(uint)ctr] = val0;
       ctr += 1;
     }
     if(val1 < KYBER_Q)
     {
       if(ctr < KYBER_N)
       {
-        rp[(int)ctr] = val1;
+        rp[(uint)ctr] = val1;
         ctr += 1;
       }
     }
@@ -582,11 +582,11 @@ fn __gen_matrix(stack u8[KYBER_SYMBYTES] seed, inline int transposed) -> stack u
 
   inline int i, j;
 
-  f = seed[u256 0];
-  buf0[u256 0] = f;
-  buf1[u256 0] = f;
-  buf2[u256 0] = f;
-  buf3[u256 0] = f;
+  f = seed[:u256 0];
+  buf0[:u256 0] = f;
+  buf1[:u256 0] = f;
+  buf2[:u256 0] = f;
+  buf3[:u256 0] = f;
   fs = f;
 
   if(transposed == 1)
@@ -667,10 +667,10 @@ fn __gen_matrix(stack u8[KYBER_SYMBYTES] seed, inline int transposed) -> stack u
   }
   
   f = fs;
-  buf0[u256 0] = f;
-  buf1[u256 0] = f;
-  buf2[u256 0] = f;
-  buf3[u256 0] = f;
+  buf0[:u256 0] = f;
+  buf1[:u256 0] = f;
+  buf2[:u256 0] = f;
+  buf3[:u256 0] = f;
   fs = f;
 
   if(transposed == 1)
@@ -752,7 +752,7 @@ fn __gen_matrix(stack u8[KYBER_SYMBYTES] seed, inline int transposed) -> stack u
   }
 
   f = fs;
-  buf0[u256 0] = f;
+  buf0[:u256 0] = f;
   buf0[KYBER_SYMBYTES]   = 2;
   buf0[KYBER_SYMBYTES+1] = 2;
 
@@ -760,14 +760,14 @@ fn __gen_matrix(stack u8[KYBER_SYMBYTES] seed, inline int transposed) -> stack u
   statev, buf0 = __shake128_squeezenblocks(statev, buf0);
 
   // spill state to free registers for rejection sampling
-  for i=0 to 7 { s_state[u256 i] = statev[i]; } 
+  for i=0 to 7 { s_state[:u256 i] = statev[i]; } 
 
   ctr0, rr[2*KYBER_VECN+2*KYBER_N:KYBER_N] = _rej_uniform_avx(rr[2*KYBER_VECN+2*KYBER_N:KYBER_N], buf0);
 
   ?{ "<=u" = b } = #CMP_64(ctr0, KYBER_N - 1);
   bflg = #SETcc(b);
 
-  for i=0 to 7 { statev[i] = s_state[u256 i]; }
+  for i=0 to 7 { statev[i] = s_state[:u256 i]; }
   
   while(bflg != 0) {
     statev, buf0[0:SHAKE128_RATE] = __shake128_squeezeblock(statev, buf0[0:SHAKE128_RATE]);
