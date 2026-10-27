@@ -1,6 +1,6 @@
 # Implementations of Post-Quantum Hybrid Combiners in Jasmin
 
-This repository contains work that was developed as part of my Master thesis: 
+This repository contains work that was developed as part of [my](https://github.com/RadPorhead) Master thesis: 
 
 **"High-Assurance Implementation of CuKEM and Quantum Cryptanalysis of Its Underlying Primitives"**
 
